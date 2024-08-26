@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  vadalog-parallel:
+    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/prometheux-reasoner:trial
+    container_name: vadalog-parallel-trial
+    ports:
+      - "8080:8080"
+    volumes:
+      - './prometheux/shared/disk:/vadalog-parallel/disk:rw'
+      - './prometheux/vadalog-parallel/pmtx.properties:/vadalog-parallel/pmtx.properties:rw'
+      - './prometheux/vadalog-parallel/spark-defaults.conf:/vadalog-parallel/spark-defaults.conf:rw'
+    environment:
+      - JAVA_OPTS=-Xmx4G
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  constellation:
+    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/constellation-backend:trial
+    container_name: constellation-backend-trial
+    ports:
+      - "8085:8085"
+    volumes:
+      - './prometheux/shared/disk:/home/constellation/constellation-backend/disk:rw'
+      - './prometheux/constellation/db:/home/constellation/constellation-backend/db:rw'
+      - './prometheux/constellation/constellation.properties:/home/constellation/constellation-backend/constellation.properties:rw'
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  jarvis:
+    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/jarvis:trial
+    container_name: jarvis-trial
+    ports:
+      - "8084:8084"
+    volumes:
+      - './prometheux/shared/disk:/home/constellation/jarvis/disk:rw'
+      - './prometheux/jarvis/db:/home/constellation/jarvis/db:rw'
+      - './prometheux/jarvis/jarvis.properties:/home/constellation/jarvis/jarvis.properties.conf:rw'
+      - './prometheux/jarvis/spark-defaults.conf:/home/constellation/jarvis/spark-defaults.conf:rw'
+    environment:
+      - JAVA_OPTS=-Xmx4G
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  jupyterlab:
+    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/jupyter-lab:latest
+    container_name: jupyterlab-trial
+    ports:
+      - "8888:8888"
+    volumes:
+      - './prometheux/shared/disk:/notebooks:rw'
+    environment:
+      - VADALOG_HOST=vadalog-parallel
+      - VADALOG_PORT=8080
+      - myToken= # leave empty for local installation
+      - myUrl= # leave empty for local installation
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
