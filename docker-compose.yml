@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   vadalog-parallel:
-    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/prometheux-reasoner-trial
+    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/prometheux-reasoner-trial:latest
     container_name: vadalog-parallel-trial
     ports:
       - "8080:8080"
