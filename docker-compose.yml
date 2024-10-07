@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   vadalog-parallel:
-    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/prometheux-reasoner:trial
+    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/prometheux-reasoner-trial
     container_name: vadalog-parallel-trial
     ports:
       - "8080:8080"
@@ -17,7 +17,7 @@ services:
     restart: unless-stopped
 
   constellation:
-    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/constellation-backend:trial
+    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/constellation-backend:latest
     container_name: constellation-backend-trial
     ports:
       - "8085:8085"
@@ -30,7 +30,7 @@ services:
     restart: unless-stopped
 
   jarvis:
-    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/jarvis:trial
+    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/jarvis:latest
     container_name: jarvis-trial
     ports:
       - "8084:8084"
