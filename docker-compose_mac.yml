@@ -4,32 +4,34 @@ services:
   vadalog-parallel:
     image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/prometheux-reasoner-premises:latest
     container_name: vadalog-parallel
-    # Host mode means it binds to the host's network stack.
-    network_mode: "host"
-    # 'ports:' is ignored in host network mode,
-    # so you can remove or comment it out
-    # ports:
-    #   - "8080:8080"
+    ports:
+      - "8080:8080"
     volumes:
       - './prometheux/shared/disk:/vadalog-parallel/disk:rw'
       - './prometheux/vadalog-parallel/pmtx.properties:/vadalog-parallel/pmtx.properties:rw'
       - './prometheux/vadalog-parallel/spark-defaults.conf:/vadalog-parallel/spark-defaults.conf:rw'
     environment:
-      - JAVA_OPTS=-Xmx28G
+      - JAVA_OPTS=-Xmx4G
+    networks:
+      - app-network
     restart: unless-stopped
 
   jupyterlab:
     image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/jupyter-lab:new
     container_name: jupyterlab
-    # Also use host networking
-    network_mode: "host"
-    # ports:
-    #   - "8888:8888"
+    ports:
+      - "8888:8888"
     volumes:
       - './prometheux/shared/disk:/notebooks:rw'
     environment:
-      - VADALOG_HOST=localhost
+      - VADALOG_HOST=vadalog-parallel
       - VADALOG_PORT=8080
       - myToken= # leave empty for local installation
       - myUrl= # leave empty for local installation
+    networks:
+      - app-network
     restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
