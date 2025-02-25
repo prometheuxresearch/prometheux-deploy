@@ -11,12 +11,6 @@ This repository contains the necessary files to set up and run the Prometheux se
 The [core reasoning engine of Prometheux](https://www.prometheux.co.uk/docs/learn/getting-started)
 .
 
-- **jarvis:**
-The Reasoning Explanations Builder and LLMs Manager.
-
-- **constellation:**
-Manages registered databases and data sources.
-
 - **jupyterlab:**
 A JupyterLab environment equipped with both Python and Vadalog kernels. It automatically integrates the [Python SDK library of the prometheux chain](https://www.prometheux.co.uk/docs/sdk).
 
@@ -58,8 +52,6 @@ A JupyterLab environment equipped with both Python and Vadalog kernels. It autom
 
 - The services are accessible on the following ports:
     - vadalog-parallel: 8080
-    - constellation: 8085
-    - jarvis: 8084
     - jupyterlab: 8888
 
 6. Stopping the Services:

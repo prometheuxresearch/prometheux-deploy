@@ -2,8 +2,8 @@ version: '3.8'
 
 services:
   vadalog-parallel:
-    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/prometheux-reasoner-trial:latest
-    container_name: vadalog-parallel-trial
+    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/prometheux-reasoner-premises:latest
+    container_name: vadalog-parallel
     ports:
       - "8080:8080"
     volumes:
@@ -16,38 +16,9 @@ services:
       - app-network
     restart: unless-stopped
 
-  constellation:
-    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/constellation-backend:latest
-    container_name: constellation-backend-trial
-    ports:
-      - "8085:8085"
-    volumes:
-      - './prometheux/shared/disk:/home/constellation/constellation-backend/disk:rw'
-      - './prometheux/constellation/db:/home/constellation/constellation-backend/db:rw'
-      - './prometheux/constellation/constellation.properties:/home/constellation/constellation-backend/constellation.properties:rw'
-    networks:
-      - app-network
-    restart: unless-stopped
-
-  jarvis:
-    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/jarvis:latest
-    container_name: jarvis-trial
-    ports:
-      - "8084:8084"
-    volumes:
-      - './prometheux/shared/disk:/home/constellation/jarvis/disk:rw'
-      - './prometheux/jarvis/db:/home/constellation/jarvis/db:rw'
-      - './prometheux/jarvis/jarvis.properties:/home/constellation/jarvis/jarvis.properties.conf:rw'
-      - './prometheux/jarvis/spark-defaults.conf:/home/constellation/jarvis/spark-defaults.conf:rw'
-    environment:
-      - JAVA_OPTS=-Xmx4G
-    networks:
-      - app-network
-    restart: unless-stopped
-
   jupyterlab:
-    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/jupyter-lab:latest
-    container_name: jupyterlab-trial
+    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/jupyter-lab:new
+    container_name: jupyterlab
     ports:
       - "8888:8888"
     volumes:
