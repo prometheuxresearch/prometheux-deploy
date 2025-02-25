@@ -18,6 +18,19 @@ services:
       - JAVA_OPTS=-Xmx4G
     restart: unless-stopped
 
+  data-manager:
+    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/data-manager:latest
+    container_name: data-manager
+    # Host mode means it binds to the host's network stack.
+    network_mode: "host"
+    # 'ports:' is ignored in host network mode,
+    # so you can remove or comment it out
+    # ports:
+    #   - "8085:8085"
+    volumes:
+      - './prometheux/shared/disk:/data-manager/disk:rw'
+    restart: unless-stopped
+
   jupyterlab:
     image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/jupyter-lab:new
     container_name: jupyterlab
