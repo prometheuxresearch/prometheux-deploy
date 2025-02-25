@@ -15,7 +15,7 @@ services:
       - './prometheux/vadalog-parallel/pmtx.properties:/vadalog-parallel/pmtx.properties:rw'
       - './prometheux/vadalog-parallel/spark-defaults.conf:/vadalog-parallel/spark-defaults.conf:rw'
     environment:
-      - JAVA_OPTS=-Xmx28G
+      - JAVA_OPTS=-Xmx4G
     restart: unless-stopped
 
   jupyterlab:
