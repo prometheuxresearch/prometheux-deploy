@@ -7,4 +7,6 @@
     # so you can remove or comment it out
     # ports:
     #   - "8000:8000"
+    environment:
+      - RUN_MODE=development
     restart: unless-stopped
