@@ -28,7 +28,7 @@ services:
     # ports:
     #   - "8085:8085"
     volumes:
-      - './prometheux/shared/disk:/data-manager/disk:rw'
+      - './prometheux/shared/disk:/home/data-manager/disk:rw'
     restart: unless-stopped
 
   jupyterlab:
