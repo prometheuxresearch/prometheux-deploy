@@ -1,4 +1,4 @@
-  data-manager:
+  jarvispy:
     image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/jarvispy:latest
     container_name: jarvispy
     # Host mode means it binds to the host's network stack.
