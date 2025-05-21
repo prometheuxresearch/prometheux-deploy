@@ -28,11 +28,27 @@ services:
     # ports:
     #   - "8085:8085"
     volumes:
-      - './prometheux/shared/disk:/home/data-manager/disk:rw'
+      - './prometheux/shared/disk:/data-manager/disk:rw'
     restart: unless-stopped
 
+  vadalingo:
+    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/vadalingo:latest
+    container_name: vadalingo
+    network_mode: "host"
+    restart: unless-stopped
+  
+  pgvector:
+    image: pgvector/pgvector:pg17
+    container_name: pgvector
+    network_mode: "host"
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: prometheux
+      POSTGRES_PASSWORD: postgres@prometheux
+      POSTGRES_DB: prometheux
+
   jupyterlab:
-    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/jupyter-lab:new
+    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/jupyter-lab:latest
     container_name: jupyterlab
     # Also use host networking
     network_mode: "host"
@@ -45,4 +61,17 @@ services:
       - VADALOG_PORT=8080
       - myToken= # leave empty for local installation
       - myUrl= # leave empty for local installation
+    restart: unless-stopped
+
+  jarvispy:
+    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/jarvispy:latest
+    container_name: jarvispy
+    # Host mode means it binds to the host's network stack.
+    network_mode: "host"
+    # 'ports:' is ignored in host network mode,
+    # so you can remove or comment it out
+    # ports:
+    #   - "8000:8000"
+    environment:
+      - RUN_MODE=development
     restart: unless-stopped

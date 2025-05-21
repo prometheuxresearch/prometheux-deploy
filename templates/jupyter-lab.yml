@@ -1,5 +1,5 @@
   jupyterlab:
-    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/jupyter-lab:new
+    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/jupyter-lab:latest
     container_name: jupyterlab
     # Also use host networking
     network_mode: "host"

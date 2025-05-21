@@ -8,18 +8,14 @@ This repository contains the necessary files to set up and run the Prometheux se
 
 ## Services
 - **vadalog-parallel:**
-The [core reasoning engine of Prometheux](https://www.prometheux.co.uk/docs/learn/getting-started)
+The [core reasoning engine of Prometheux](https://www.prometheux.ai/docs/learn/getting-started)
 .
 
 - **jupyterlab:**
-A JupyterLab environment equipped with both Python and Vadalog kernels. It automatically integrates the [Python SDK library of the prometheux chain](https://www.prometheux.co.uk/docs/sdk).
-
-    To enable the interaction of the prometheux chain within **jupyterlab** with the other composed services, you will have to set the following configuration properties:
-    
-    ```
-    prometheux_chain.config.set("CONSTELLATION_BACKEND_URL", "http://constellation:8085")
-    prometheux_chain.config.set("JARVIS_URL", "http://jarvis:8084")
-    ```
+A JupyterLab environment equipped with both Python and Vadalog kernels. You can download the the [Python SDK library of the prometheux chain](https://www.prometheux.ai/docs/sdk) via pip:
+```
+pip install --upgrade prometheux_chain
+```
 
 ## Setup Instructions
 
@@ -46,7 +42,7 @@ A JupyterLab environment equipped with both Python and Vadalog kernels. It autom
 
 4. **Configuration Files:**
 
-- You can modify the configuration files for vadalog-parallel, jarvis, and constellation. These are mounted from the host.
+- You can modify the configuration files for vadalog-parallel. These are mounted from the host in prometheux/vadalog-parallel folder.
 
 5. **Accessing Services:**
 
