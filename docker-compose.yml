@@ -3,75 +3,71 @@ version: '3.8'
 services:
   vadalog-parallel:
     image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/prometheux-reasoner-premises:latest
+    pull_policy: always
     container_name: vadalog-parallel
-    # Host mode means it binds to the host's network stack.
-    network_mode: "host"
-    # 'ports:' is ignored in host network mode,
-    # so you can remove or comment it out
-    # ports:
-    #   - "8080:8080"
+    ports: ["8080:8080"]
     volumes:
-      - './prometheux/shared/disk:/vadalog-parallel/disk:rw'
-      - './prometheux/vadalog-parallel/pmtx.properties:/vadalog-parallel/pmtx.properties:rw'
-      - './prometheux/vadalog-parallel/spark-defaults.conf:/vadalog-parallel/spark-defaults.conf:rw'
+      - ./prometheux/shared/disk:/vadalog-parallel/disk
+      - ./prometheux/vadalog-parallel/pmtx.properties:/vadalog-parallel/pmtx.properties
+      - ./prometheux/vadalog-parallel/spark-defaults.conf:/vadalog-parallel/spark-defaults.conf
     environment:
-      - JAVA_OPTS=-Xmx4G
+      JAVA_OPTS: -Xmx4G
     restart: unless-stopped
+    networks: [backend]
 
   data-manager:
     image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/data-manager:latest
+    pull_policy: always
     container_name: data-manager
-    # Host mode means it binds to the host's network stack.
-    network_mode: "host"
-    # 'ports:' is ignored in host network mode,
-    # so you can remove or comment it out
-    # ports:
-    #   - "8085:8085"
+    ports: ["8085:8085"]
     volumes:
-      - './prometheux/shared/disk:/data-manager/disk:rw'
+      - ./prometheux/shared/disk:/data-manager/disk
     restart: unless-stopped
+    networks: [backend]
 
-  vadalingo:
-    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/vadalingo:latest
-    container_name: vadalingo
-    network_mode: "host"
-    restart: unless-stopped
-  
   pgvector:
     image: pgvector/pgvector:pg17
     container_name: pgvector
-    network_mode: "host"
-    restart: unless-stopped
+    ports: ["5432:5432"]
     environment:
       POSTGRES_USER: prometheux
       POSTGRES_PASSWORD: postgres@prometheux
       POSTGRES_DB: prometheux
+    restart: unless-stopped
+    networks: [backend]
 
   jupyterlab:
     image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/jupyter-lab:latest
+    pull_policy: always
     container_name: jupyterlab
-    # Also use host networking
-    network_mode: "host"
-    # ports:
-    #   - "8888:8888"
+    ports: ["8888:8888"]
     volumes:
-      - './prometheux/shared/disk:/notebooks:rw'
+      - ./prometheux/shared/disk:/notebooks
     environment:
-      - VADALOG_HOST=localhost
-      - VADALOG_PORT=8080
-      - myToken= # leave empty for local installation
-      - myUrl= # leave empty for local installation
+      VADALOG_HOST: vadalog-parallel
+      VADALOG_PORT: 8080
     restart: unless-stopped
+    networks: [backend]
 
   jarvispy:
     image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/jarvispy:latest
+    pull_policy: always
     container_name: jarvispy
-    # Host mode means it binds to the host's network stack.
-    network_mode: "host"
-    # 'ports:' is ignored in host network mode,
-    # so you can remove or comment it out
-    # ports:
-    #   - "8000:8000"
+    ports: ["8000:8000"]
     environment:
-      - RUN_MODE=development
+      RUN_MODE: development
     restart: unless-stopped
+    networks: [backend]
+
+  ui:
+    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/ui:latest
+    pull_policy: always
+    container_name: ui
+    ports: ["3000:80"]
+    environment:
+      RUN_MODE: development
+    restart: unless-stopped
+    networks: [backend]
+
+networks:
+  backend: {}
