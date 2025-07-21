@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   vadalog-parallel:
-    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/prometheux-reasoner-premises:latest
+    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/prometheux-reasoner-premises-n:latest
     pull_policy: always
     container_name: vadalog-parallel
     # Host mode means it binds to the host's network stack.
