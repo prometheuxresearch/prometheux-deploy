@@ -19,4 +19,4 @@ echo $PROMETHEUX_PULL_IMAGE_TOKEN | docker login --username AWS --password-stdin
 mkdir -p ./prometheux/shared/disk
 mkdir -p ./prometheux/vadalog-parallel
 
-docker-compose up -d
+docker compose up -d

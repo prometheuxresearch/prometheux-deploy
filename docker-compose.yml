@@ -84,17 +84,3 @@ services:
       - USER=devuser
       - ORGANIZATION=devorg
     restart: unless-stopped
-
-  ui:
-    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/ui:latest
-    pull_policy: always
-    container_name: ui
-    # Host mode means it binds to the host's network stack.
-    network_mode: "host"
-    # 'ports:' is ignored in host network mode,
-    # so you can remove or comment it out
-    # ports:
-    #   - "8000:8000"
-    environment:
-      - RUN_MODE=development
-    restart: unless-stopped
