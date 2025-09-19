@@ -2,7 +2,7 @@
 # Copy this file to terraform.tfvars and fill in your actual values
 
 # Databricks workspace URL (e.g., https://your-workspace.cloud.databricks.com)
-databricks_host = "https://dbc-b3de7e58-676e.cloud.databricks.com/"
+databricks_host = "https://your-workspace.cloud.databricks.com"
 
 # Databricks personal access token
 # Generate this from: Databricks workspace > User Settings > Access Tokens
