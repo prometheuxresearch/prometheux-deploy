@@ -81,6 +81,6 @@ services:
     #   - "8000:8000"
     environment:
       - RUN_MODE=development
-      - USER=devuser
+      - USERNAME=devuser
       - ORGANIZATION=devorg
     restart: unless-stopped
