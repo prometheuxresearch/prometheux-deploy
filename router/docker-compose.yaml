@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  router-on-premise:
+    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/router-on-premise:latest
+    pull_policy: always
+    container_name: router-on-premise
+    network_mode: "host"
+    environment:
+      - SECRET_KEY=XXXX
+    volumes:
+      - ./config.yaml:/app/app/config.yaml:ro
+    restart: unless-stopped

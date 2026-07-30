@@ -1,0 +1,18 @@
+# User to Backend Instance Mapping
+# Each user routes to a specific jarvispy instance
+users:
+  # Format: username: backend_url
+  user_1: "http://localhost:8001"
+  user_2: "http://localhost:8002"
+
+# Circuit Breaker Configuration
+circuit_breaker:
+  failure_threshold: 5  # Number of failures before opening circuit
+  recovery_timeout: 60  # Seconds to wait before attempting recovery
+  
+# Health Check Configuration
+health_check:
+  enabled: true
+  interval: 30  # Seconds between health checks
+  timeout: 5    # Seconds to wait for health check response
+  endpoint: "/"  # Health check endpoint on backend instances

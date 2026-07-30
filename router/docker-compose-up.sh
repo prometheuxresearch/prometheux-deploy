@@ -1,0 +1,22 @@
+#!/bin/bash
+
+if [ ! -f prometheux-image-pull-token.txt ]; then
+  echo "prometheux-image-pull-token.txt file not found!"
+  exit 1
+fi
+
+export PROMETHEUX_PULL_IMAGE_TOKEN=$(cat prometheux-image-pull-token.txt)
+
+if [ -z "$PROMETHEUX_PULL_IMAGE_TOKEN" ]; then
+  echo "PROMETHEUX_PULL_IMAGE_TOKEN environment variable is not set!"
+  exit 1
+fi
+
+ECR_URI="094284551733.dkr.ecr.eu-west-2.amazonaws.com"
+
+echo $PROMETHEUX_PULL_IMAGE_TOKEN | docker login --username AWS --password-stdin $ECR_URI
+
+mkdir -p ./shared
+
+docker-compose pull
+docker-compose up -d
