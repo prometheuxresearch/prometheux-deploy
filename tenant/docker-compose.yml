@@ -87,13 +87,13 @@ services:
     networks:
       - ${USERNAME}_network
     ports:
-      - "8888:8888"
+      - "${JUPYTERLAB_PORT}:8888"
     volumes:
       - './shared/disk:/notebooks:rw'
     environment:
       - VADALOG_HOST=vadalog-parallel
       - VADALOG_PORT=8080
-      - myToken=TbMcS530
+      - myToken=${JUPYTERLAB_TOKEN}
       - myUrl=
     restart: unless-stopped
 

@@ -5,7 +5,7 @@ services:
     image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/router-on-premise:latest
     pull_policy: always
     container_name: router-on-premise
-    network_mode: "host"
+    network_mode: "host"  # Listens on host port 8000
     environment:
       - SECRET_KEY=${SECRET_KEY}
     volumes:

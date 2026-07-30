@@ -11,6 +11,7 @@ This repository contains the necessary files to deploy the Prometheux platform o
 ┌─────────────────────────────────────────┐
 │               Router                    │
 │  (router-on-premise, host network)      │
+│  Listens on host port 8000              │
 │  Routes user_1 → localhost:8001         │
 │  Routes user_2 → localhost:8002  ...    │
 └────────────────┬────────────────────────┘
@@ -105,12 +106,14 @@ prometheux-deploy/
 │   ├── docker-compose-up.sh         # Start the router
 │   ├── docker-compose-down.sh       # Stop the router
 │   ├── config.yaml                  # User-to-backend routing configuration
+│   ├── .env.example                 # Router environment variables template
 │   └── prometheux-image-pull-token.txt  # ECR pull token (to be filled in)
 │
-└── tenant/
+└── tenant/                          # Template — copy and rename per user (e.g. alice/, bob/)
     ├── docker-compose.yml           # Full tenant stack definition
     ├── docker-compose-up.sh         # Start the tenant stack
     ├── docker-compose-down.sh       # Stop the tenant stack
+    ├── .env.example                 # Tenant environment variables template
     ├── prometheux-image-pull-token.txt  # ECR pull token (to be filled in)
     └── vadalog-parallel/
         ├── pmtx.properties          # Vadalog engine configuration
@@ -123,9 +126,9 @@ prometheux-deploy/
 
 ### Router
 
-| Service | Description |
-|---|---|
-| `router-on-premise` | Reverse proxy that routes authenticated users to their tenant `jarvispy` instance. Runs in host network mode. |
+| Service | Port | Description |
+|---|---|---|
+| `router-on-premise` | `8000` | Reverse proxy that routes authenticated users to their tenant `jarvispy` instance. Runs in host network mode and listens on port 8000. |
 
 ### Tenant
 
@@ -194,6 +197,8 @@ Edit `tenant/.env`:
 | `ORGANIZATION` | The tenant's organisation name, passed to the `jarvispy` service. |
 | `CUSTOMER` | The customer name provided by Prometheux, used in the `vadalog-parallel` image tag (`prometheux-reasoner-premises-${CUSTOMER}:latest`). |
 | `JARVISPY_PORT` | The host port on which `jarvispy` is exposed. Must match the entry for this user in `router/config.yaml`. |
+| `JUPYTERLAB_PORT` | The host port on which JupyterLab is exposed (e.g. `8888`). Reachable at `http://localhost:${JUPYTERLAB_PORT}` from the VM. |
+| `JUPYTERLAB_TOKEN` | The access token for JupyterLab. Choose any value — this is the token you will use to log in to JupyterLab. |
 
 You can also tune the Vadalog engine by editing:
 - `tenant/vadalog-parallel/pmtx.properties`
@@ -215,7 +220,7 @@ cd tenant
 ./docker-compose-up.sh
 ```
 
-This authenticates with ECR, creates the required local directories (`shared/disk`, `vadalog-parallel/localCheckpoints`, `vadalog-parallel/tmp`), pulls all images, and starts the full tenant stack in detached mode.
+This authenticates with ECR, creates the required local directories (`shared/disk`, `vadalog-parallel/localCheckpoints`, `vadalog-parallel/tmp`, `vadalog-parallel/log`), pulls all images, and starts the full tenant stack in detached mode.
 
 ---
 
@@ -237,7 +242,17 @@ cd tenant
 
 ## Notes
 
-- Multiple tenants can be deployed on the same host by duplicating the `tenant/` directory and assigning a unique port and network name to each.
-- The `shared/disk` volume is shared between `jarvispy`, `vadalog-parallel`, `data-manager`, `vadalingo`, and `jupyterlab`, enabling seamless file exchange across services.
+- The `tenant/` folder is a **template**. For each new user, copy the folder and rename it to their username, then fill in their `.env` file with unique values for `USERNAME`, `JARVISPY_PORT`, `JUPYTERLAB_PORT`, etc.:
+    ```bash
+    cp -r tenant alice
+    cp alice/.env.example alice/.env
+    # edit alice/.env
+    ```
+  Then add the user's routing entry in `router/config.yaml`:
+    ```yaml
+    users:
+      alice: "http://localhost:8001"
+    ```
+- The `shared/disk` volume is shared between `jarvispy`, `vadalog-parallel`, `data-manager`, `vadalingo`, and `jupyterlab`, enabling seamless file exchange across services within a tenant.
 - All services are configured with `restart: unless-stopped`, so they will automatically restart after a system reboot.
 
