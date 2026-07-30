@@ -6,7 +6,7 @@ services:
     pull_policy: always
     container_name: jarvispy-${USERNAME}
     networks:
-      - ${USERNAME}_network
+      - tenant_network
     volumes:
       - './shared/disk:/jarvispy/disk:rw'
     ports:
@@ -27,7 +27,7 @@ services:
     pull_policy: always
     container_name: vadalog-parallel-${USERNAME}
     networks:
-      - ${USERNAME}_network
+      - tenant_network
     logging:
       driver: "json-file"
       options:
@@ -52,7 +52,7 @@ services:
     pull_policy: always
     container_name: data-manager-${USERNAME}
     networks:
-      - ${USERNAME}_network
+      - tenant_network
     volumes:
       - './shared/disk:/data-manager/disk:rw'
     restart: unless-stopped
@@ -62,7 +62,7 @@ services:
     pull_policy: always
     container_name: vadalingo-${USERNAME}
     networks:
-      - ${USERNAME}_network
+      - tenant_network
     volumes:
       - './shared/disk:/vadalingo/disk:rw'
     restart: unless-stopped
@@ -71,7 +71,7 @@ services:
     image: pgvector/pgvector:pg17
     container_name: pgvector-${USERNAME}
     networks:
-      - ${USERNAME}_network
+      - tenant_network
     restart: unless-stopped
     environment:
       POSTGRES_USER: prometheux
@@ -85,7 +85,7 @@ services:
     pull_policy: always
     container_name: jupyterlab-${USERNAME}
     networks:
-      - ${USERNAME}_network
+      - tenant_network
     ports:
       - "${JUPYTERLAB_PORT}:8888"
     volumes:
@@ -98,5 +98,6 @@ services:
     restart: unless-stopped
 
 networks:
-  ${USERNAME}_network:
+  tenant_network:
+    name: ${USERNAME}_network
     driver: bridge

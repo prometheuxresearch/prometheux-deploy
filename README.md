@@ -69,8 +69,8 @@ This repository contains the necessary files to deploy the Prometheux platform o
 4. Add your user to the `docker` group to run Docker without `sudo`:
     ```bash
     sudo usermod -aG docker $USER
-    newgrp docker
     ```
+    > **Note:** Log out and back in for the group change to take effect.
 
 5. Verify the installation:
     ```bash
@@ -150,6 +150,13 @@ prometheux-deploy/
 ```bash
 git clone git@github.com:prometheuxresearch/prometheux-deploy.git
 cd prometheux-deploy
+```
+
+Make the startup and shutdown scripts executable:
+
+```bash
+chmod +x router/docker-compose-up.sh router/docker-compose-down.sh
+chmod +x tenant/docker-compose-up.sh tenant/docker-compose-down.sh
 ```
 
 ### 2. Configure the Image Pull Token
