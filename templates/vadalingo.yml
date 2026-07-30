@@ -1,5 +1,0 @@
-  vadalingo:
-    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/vadalingo:latest
-    container_name: vadalingo
-    network_mode: "host"
-    restart: unless-stopped
