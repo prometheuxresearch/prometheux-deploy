@@ -16,7 +16,11 @@ ECR_URI="094284551733.dkr.ecr.eu-west-2.amazonaws.com"
 
 echo $PROMETHEUX_PULL_IMAGE_TOKEN | docker login --username AWS --password-stdin $ECR_URI
 
-mkdir -p ./prometheux/shared/disk
-mkdir -p ./prometheux/vadalog-parallel
+mkdir -p ./shared/disk
+mkdir -p ./vadalog-parallel
 
-docker compose up -d
+mkdir -p ./vadalog-parallel/localCheckpoints
+mkdir -p ./vadalog-parallel/tmp
+
+docker-compose pull
+docker-compose up -d
