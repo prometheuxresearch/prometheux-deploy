@@ -1,64 +1,243 @@
 # Prometheux Deploy
+
 ## Overview
-This repository contains the necessary files to set up and run the Prometheux services using Docker Compose. The setup creates a network connecting the services and exposes their ports for external access.
+
+This repository contains the necessary files to deploy the Prometheux platform on-premise using Docker Compose. The setup is composed of two independent stacks:
+
+- **Router** (`router/`) — an on-premise reverse proxy that routes each user to their dedicated tenant backend, with circuit-breaker and health-check support.
+- **Tenant** (`tenant/`) — a full per-tenant stack including the reasoning engine, data manager, language service, vector database, and JupyterLab.
+
+```
+┌─────────────────────────────────────────┐
+│               Router                    │
+│  (router-on-premise, host network)      │
+│  Routes user_1 → localhost:8001         │
+│  Routes user_2 → localhost:8002  ...    │
+└────────────────┬────────────────────────┘
+                 │
+    ┌────────────▼────────────┐
+    │       Tenant Stack      │
+    │  jarvispy      :8001    │
+    │  vadalog-parallel       │
+    │  data-manager           │
+    │  vadalingo              │
+    │  pgvector               │
+    │  jupyterlab    :8888    │
+    └─────────────────────────┘
+```
+
+---
 
 ## Prerequisites
-- **Docker** and **Docker Compose** installed.
-- **PROMETHEUX_PULL_IMAGE_TOKEN:** A token required to pull Docker images from the Prometheux repository
+
+- **Docker** and **Docker Compose** installed (see installation steps below).
+- The following credentials, all **provided by Prometheux**:
+
+| Secret | Where it is used |
+|---|---|
+| `PROMETHEUX_PULL_IMAGE_TOKEN` | Password for authenticating against the Prometheux AWS ECR registry to pull Docker images. Used by the startup scripts in both `router/` and `tenant/`. |
+| `SECRET_KEY` | JWT secret used by the Router to validate tokens issued by the Prometheux UI. Set in `router/.env`. |
+| `CUSTOMER` | Customer-specific name that identifies the correct `vadalog-parallel` image tag (`prometheux-reasoner-premises-${CUSTOMER}:latest`). Set in `tenant/.env`. |
+
+### Installing Docker
+
+1. Update your package index and install required dependencies:
+    ```bash
+    sudo apt-get update
+    sudo apt-get install -y ca-certificates curl gnupg
+    ```
+
+2. Add Docker's official GPG key and repository:
+    ```bash
+    sudo install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    ```
+
+3. Install Docker Engine:
+    ```bash
+    sudo apt-get update
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+    ```
+
+4. Add your user to the `docker` group to run Docker without `sudo`:
+    ```bash
+    sudo usermod -aG docker $USER
+    newgrp docker
+    ```
+
+5. Verify the installation:
+    ```bash
+    docker --version
+    ```
+
+### Installing Docker Compose
+
+1. Download the latest Docker Compose binary:
+    ```bash
+    sudo curl -SL "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
+      -o /usr/local/bin/docker-compose
+    ```
+
+2. Apply executable permissions:
+    ```bash
+    sudo chmod +x /usr/local/bin/docker-compose
+    ```
+
+3. Verify the installation:
+    ```bash
+    docker-compose --version
+    ```
+
+---
+
+## Repository Structure
+
+```
+prometheux-deploy/
+├── router/
+│   ├── docker-compose.yaml          # Router service definition
+│   ├── docker-compose-up.sh         # Start the router
+│   ├── docker-compose-down.sh       # Stop the router
+│   ├── config.yaml                  # User-to-backend routing configuration
+│   └── prometheux-image-pull-token.txt  # ECR pull token (to be filled in)
+│
+└── tenant/
+    ├── docker-compose.yml           # Full tenant stack definition
+    ├── docker-compose-up.sh         # Start the tenant stack
+    ├── docker-compose-down.sh       # Stop the tenant stack
+    ├── prometheux-image-pull-token.txt  # ECR pull token (to be filled in)
+    └── vadalog-parallel/
+        ├── pmtx.properties          # Vadalog engine configuration
+        └── spark-defaults.conf      # Spark configuration
+```
+
+---
 
 ## Services
-- **vadalog-parallel:**
-The [core reasoning engine of Prometheux](https://www.prometheux.ai/docs/learn/getting-started)
-.
 
-- **jupyterlab:**
-A JupyterLab environment equipped with both Python and Vadalog kernels. You can download the the [Python SDK library of the prometheux chain](https://www.prometheux.ai/docs/sdk) via pip:
-```
-pip install --upgrade prometheux_chain
-```
+### Router
+
+| Service | Description |
+|---|---|
+| `router-on-premise` | Reverse proxy that routes authenticated users to their tenant `jarvispy` instance. Runs in host network mode. |
+
+### Tenant
+
+| Service | Port | Description |
+|---|---|---|
+| `jarvispy` | `8001` (configurable) | Main Prometheux API backend for the tenant. |
+| `vadalog-parallel` | internal | [Core reasoning engine](https://www.prometheux.ai/docs/learn/getting-started) of Prometheux. |
+| `data-manager` | internal | Manages data sources and persistence. |
+| `vadalingo` | internal | Natural language to Vadalog translation service. |
+| `pgvector` | internal | PostgreSQL database with vector extension for semantic storage. |
+| `jupyterlab` | `8888` | JupyterLab with Python and Vadalog kernels. Install the SDK via: `pip install --upgrade prometheux_chain` |
+
+---
 
 ## Setup Instructions
 
-1. **Clone the Repository:**
+### 1. Clone the Repository
 
-    ```
-    git clone git@github.com:prometheuxresearch/prometheux-deploy.git
-    cd prometheux-deploy
-    ```
+```bash
+git clone git@github.com:prometheuxresearch/prometheux-deploy.git
+cd prometheux-deploy
+```
 
-2. **Configure the Image Pull Token:**
+### 2. Configure the Image Pull Token
 
-- Obtain from Prometheux the **PROMETHEUX_PULL_IMAGE_TOKEN** and replace the content of **prometheux-image-pull-token.txt** file with the provided token.
+Both the `router/` and `tenant/` folders contain a `prometheux-image-pull-token.txt` file. Replace the placeholder content in **each** file with the `PROMETHEUX_PULL_IMAGE_TOKEN` provided by Prometheux:
 
-3. **Start the Services:**
+```bash
+echo "<your-token>" > router/prometheux-image-pull-token.txt
+echo "<your-token>" > tenant/prometheux-image-pull-token.txt
+```
 
-- Run the following command to start all Prometheux services:
+This token is used by the startup scripts to authenticate against the Prometheux AWS ECR registry before pulling Docker images.
 
-    ```
-    ./docker-compose-up.sh
-    ```
+### 3. Configure the Router
 
-    This script reads the image pull token and starts the services in detached mode.
+Copy the example environment file and fill in the values:
 
-4. **Configuration Files:**
+```bash
+cp router/.env.example router/.env
+```
 
-- You can modify the configuration files for vadalog-parallel. These are mounted from the host in prometheux/vadalog-parallel folder.
+Edit `router/.env` and set `SECRET_KEY` to the JWT secret provided by Prometheux. This key is used by the router to validate tokens issued by the Prometheux UI.
 
-5. **Accessing Services:**
+Edit `router/config.yaml` to map each username to their tenant's `jarvispy` backend URL:
 
-- The services are accessible on the following ports:
-    - vadalog-parallel: 8080
-    - jupyterlab: 8888
+```yaml
+users:
+  alice: "http://localhost:8001"
+  bob:   "http://localhost:8002"
+```
 
-6. Stopping the Services:
+### 4. Configure the Tenant Stack
 
-- To stop all services, run:
+Copy the example environment file and fill in the values:
 
-    ```
-    ./docker-compose-down.sh
-    ```
+```bash
+cp tenant/.env.example tenant/.env
+```
+
+Edit `tenant/.env`:
+
+| Variable | Description |
+|---|---|
+| `USERNAME` | The tenant's username. Used in all container names and the Docker network name. |
+| `ORGANIZATION` | The tenant's organisation name, passed to the `jarvispy` service. |
+| `CUSTOMER` | The customer name provided by Prometheux, used in the `vadalog-parallel` image tag (`prometheux-reasoner-premises-${CUSTOMER}:latest`). |
+| `JARVISPY_PORT` | The host port on which `jarvispy` is exposed. Must match the entry for this user in `router/config.yaml`. |
+
+You can also tune the Vadalog engine by editing:
+- `tenant/vadalog-parallel/pmtx.properties`
+- `tenant/vadalog-parallel/spark-defaults.conf`
+
+### 5. Start the Router
+
+```bash
+cd router
+./docker-compose-up.sh
+```
+
+This authenticates with ECR, pulls the latest `router-on-premise` image, and starts it in detached mode using host networking.
+
+### 6. Start the Tenant Stack
+
+```bash
+cd tenant
+./docker-compose-up.sh
+```
+
+This authenticates with ECR, creates the required local directories (`shared/disk`, `vadalog-parallel/localCheckpoints`, `vadalog-parallel/tmp`), pulls all images, and starts the full tenant stack in detached mode.
+
+---
+
+## Stopping the Services
+
+To stop the **router**:
+```bash
+cd router
+./docker-compose-down.sh
+```
+
+To stop the **tenant** stack:
+```bash
+cd tenant
+./docker-compose-down.sh
+```
+
+---
 
 ## Notes
-- Ensure that the paths specified in the **docker-compose.yml** file match your directory structure.
-- Modify the **.sh** scripts as needed to fit your environment.
+
+- Multiple tenants can be deployed on the same host by duplicating the `tenant/` directory and assigning a unique port and network name to each.
+- The `shared/disk` volume is shared between `jarvispy`, `vadalog-parallel`, `data-manager`, `vadalingo`, and `jupyterlab`, enabling seamless file exchange across services.
+- All services are configured with `restart: unless-stopped`, so they will automatically restart after a system reboot.
 

@@ -7,7 +7,7 @@ services:
     container_name: router-on-premise
     network_mode: "host"
     environment:
-      - SECRET_KEY=XXXX
+      - SECRET_KEY=${SECRET_KEY}
     volumes:
       - ./config.yaml:/app/app/config.yaml:ro
     restart: unless-stopped

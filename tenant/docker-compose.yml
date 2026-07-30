@@ -4,17 +4,17 @@ services:
   jarvispy:
     image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/jarvispy:latest
     pull_policy: always
-    container_name: jarvispy-xxxx
+    container_name: jarvispy-${USERNAME}
     networks:
-      - xxxx_network
+      - ${USERNAME}_network
     volumes:
       - './shared/disk:/jarvispy/disk:rw'
     ports:
-      - "8001_xxxxtenant:8000"
+      - "${JARVISPY_PORT}:8000"
     environment:
       - RUN_MODE=development
-      - USERNAME=xxxx
-      - ORGANIZATION=xxxx
+      - USERNAME=${USERNAME}
+      - ORGANIZATION=${ORGANIZATION}
       - TO_PERSIST_DATASOURCE_HOST=pgvector
       - VADALINGO_URL=http://vadalingo:8086
       - DATA_MANAGER_URL=http://data-manager:8085
@@ -23,11 +23,11 @@ services:
     restart: unless-stopped
 
   vadalog-parallel:
-    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/prometheux-reasoner-premises-____:latest
+    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/prometheux-reasoner-premises-${CUSTOMER}:latest
     pull_policy: always
-    container_name: vadalog-parallel-xxxx
+    container_name: vadalog-parallel-${USERNAME}
     networks:
-      - xxxx_network
+      - ${USERNAME}_network
     logging:
       driver: "json-file"
       options:
@@ -50,9 +50,9 @@ services:
   data-manager:
     image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/data-manager:latest
     pull_policy: always
-    container_name: data-manager-xxxx
+    container_name: data-manager-${USERNAME}
     networks:
-      - xxxx_network
+      - ${USERNAME}_network
     volumes:
       - './shared/disk:/data-manager/disk:rw'
     restart: unless-stopped
@@ -60,18 +60,18 @@ services:
   vadalingo:
     image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/vadalingo:latest
     pull_policy: always
-    container_name: vadalingo-xxxx
+    container_name: vadalingo-${USERNAME}
     networks:
-      - xxxx_network
+      - ${USERNAME}_network
     volumes:
       - './shared/disk:/vadalingo/disk:rw'
     restart: unless-stopped
 
   pgvector:
     image: pgvector/pgvector:pg17
-    container_name: pgvector-xxxx
+    container_name: pgvector-${USERNAME}
     networks:
-      - xxxx_network
+      - ${USERNAME}_network
     restart: unless-stopped
     environment:
       POSTGRES_USER: prometheux
@@ -83,9 +83,9 @@ services:
   jupyterlab:
     image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/jupyter-lab:latest
     pull_policy: always
-    container_name: jupyterlab-xxxx
+    container_name: jupyterlab-${USERNAME}
     networks:
-      - xxxx_network
+      - ${USERNAME}_network
     ports:
       - "8888:8888"
     volumes:
@@ -98,5 +98,5 @@ services:
     restart: unless-stopped
 
 networks:
-  xxxx_network:
+  ${USERNAME}_network:
     driver: bridge
