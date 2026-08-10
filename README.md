@@ -7,6 +7,8 @@ This repository contains the necessary files to deploy the Prometheux platform o
 - **Router** (`router/`) — an on-premise reverse proxy that routes each user to their dedicated tenant backend, with circuit-breaker and health-check support.
 - **Tenant** (`tenant/`) — a full per-tenant stack including the reasoning engine, data manager, language service, vector database, and JupyterLab.
 
+This deployment runs on **any Linux machine that can run Docker** — whether a physical server in your data centre or a VM on a public cloud. If you are using a cloud VM, see the [Provisioning a Cloud VM](#provisioning-a-cloud-vm-optional) section before proceeding.
+
 ```
 ┌─────────────────────────────────────────┐
 │               Router                    │
@@ -26,6 +28,76 @@ This repository contains the necessary files to deploy the Prometheux platform o
     │  jupyterlab    :8888    │
     └─────────────────────────┘
 ```
+
+---
+
+## Provisioning a Cloud VM (Optional)
+
+> Skip this section if you are deploying on a **physical Linux server** — the setup process is identical once Docker is installed.
+
+If you are running on a cloud provider, provision a Linux VM first. The minimum recommended size is **4 vCPUs, 16 GB RAM, 50 GB disk**.
+
+> **Sizing your disk:** The 50 GB minimum only covers the OS and container images — it does **not** account for your data (`shared/disk`, `postgres-data`, Engine checkpoints/logs). Before provisioning, consider how much data you expect to store over time:
+> - **If the machine will not be resized later**, size the boot/data disk generously upfront based on your expected data growth (e.g. 500 GB, 1 TB, or more).
+> - **If you want to avoid guessing**, attach a **separate, extensible storage volume** for the stateful paths instead of relying on the VM's own disk (AWS EBS, Azure Managed Disk, or GCP Persistent Disk can all be resized later without recreating the VM). This is the safest option and also makes [migration](#migrating-to-a-different-machine) trivial.
+> - **If the disk size is already fixed** and you later need to move to a bigger disk, you can `tar`/`gzip` the stateful folders and copy the archive to the new disk instead of attaching/detaching a volume:
+>   ```bash
+>   tar -czf tenant-data.tar.gz tenant/shared tenant/postgres-data tenant/vadalog-parallel/{localCheckpoints,tmp,log}
+>   scp tenant-data.tar.gz user@<new-host>:/path/to/prometheux-deploy/
+>   # on the new host
+>   tar -xzf tenant-data.tar.gz
+>   ```
+
+<details>
+<summary><strong>AWS — EC2</strong></summary>
+
+1. Open the [EC2 console](https://console.aws.amazon.com/ec2/) and click **Launch instance**.
+2. Choose an **Ubuntu 22.04 LTS** (or later) AMI.
+3. Select instance type **`m5.xlarge`** (4 vCPU, 16 GB) or larger.
+4. Under **Key pair**, create or select an existing key pair for SSH access.
+5. Under **Network settings**, ensure port **22** (SSH) is open. Open ports **8000**, **8001**, **8888** (or your chosen ports) to your desired CIDR range.
+6. Set root volume to at least **50 GB**.
+7. Launch the instance and connect via SSH:
+    ```bash
+    ssh -i your-key.pem ubuntu@<EC2_PUBLIC_IP>
+    ```
+
+</details>
+
+<details>
+<summary><strong>Azure — Virtual Machine</strong></summary>
+
+1. Open the [Azure Portal](https://portal.azure.com/) and search for **Virtual machines** → **Create**.
+2. Choose **Ubuntu Server 22.04 LTS** as the image.
+3. Select size **`Standard_D4s_v3`** (4 vCPU, 16 GB) or larger.
+4. Under **Administrator account**, choose **SSH public key** and upload or generate a key.
+5. Under **Inbound port rules**, allow **SSH (22)**. After creation, add inbound rules for ports **8000**, **8001**, **8888** (or your chosen ports) in the **Network Security Group**.
+6. Set OS disk size to at least **50 GB**.
+7. Connect via SSH:
+    ```bash
+    ssh -i your-key.pem azureuser@<VM_PUBLIC_IP>
+    ```
+
+</details>
+
+<details>
+<summary><strong>GCP — Compute Engine</strong></summary>
+
+1. Open the [Compute Engine console](https://console.cloud.google.com/compute/) and click **Create instance**.
+2. Choose **Ubuntu 22.04 LTS** as the boot disk image.
+3. Select machine type **`e2-standard-4`** (4 vCPU, 16 GB) or larger.
+4. Under **Boot disk**, set the size to at least **50 GB**.
+5. Under **Firewall**, check **Allow HTTP traffic** or create a custom firewall rule to open ports **8000**, **8001**, **8888** (or your chosen ports).
+6. Under **SSH Keys**, add your public key in the **Metadata** section.
+7. Connect via SSH:
+    ```bash
+    ssh -i your-key username@<VM_EXTERNAL_IP>
+    ```
+    Or use the **SSH** button directly in the console.
+
+</details>
+
+Once connected to your VM, proceed with the Docker and Docker Compose installation below.
 
 ---
 
@@ -199,7 +271,7 @@ prometheux-deploy/
     ├── .env.example                 # Tenant environment variables template
     ├── prometheux-image-pull-token.txt  # ECR pull token (to be filled in)
     └── vadalog-parallel/
-        ├── pmtx.properties          # Vadalog engine configuration
+        ├── pmtx.properties          # Engine configuration
         └── spark-defaults.conf      # Spark configuration
 ```
 
@@ -220,9 +292,9 @@ prometheux-deploy/
 | `jarvispy` | `8001` (configurable) | Main Prometheux API backend for the tenant. |
 | `vadalog-parallel` | internal | [Core reasoning engine of Prometheux](https://www.vldb.org/pvldb/vol17/p4614-benedetto.pdf). |
 | `data-manager` | internal | Manages data sources and persistence. |
-| `vadalingo` | internal | Natural language to Vadalog translation service. |
+| `vadalingo` | internal | Natural language to Engine translation service. |
 | `pgvector` | internal | PostgreSQL database with vector extension for semantic storage. |
-| `jupyterlab` | `8888` | JupyterLab with Python and Vadalog kernels. Install the SDK via: `pip install --upgrade prometheux_chain` |
+| `jupyterlab` | `8888` | JupyterLab with Python and Engine kernels. Install the SDK via: `pip install --upgrade prometheux_chain` |
 
 ---
 
@@ -290,7 +362,7 @@ Edit `tenant/.env`:
 | `JUPYTERLAB_PORT` | The host port on which JupyterLab is exposed (e.g. `8888`). Reachable at `http://localhost:${JUPYTERLAB_PORT}` from the VM. |
 | `JUPYTERLAB_TOKEN` | The access token for JupyterLab. Choose any value — this is the token you will use to log in to JupyterLab. |
 
-You can also tune the Vadalog engine by editing:
+You can also tune the Prometheux Engine by editing:
 - `tenant/vadalog-parallel/pmtx.properties`
 - `tenant/vadalog-parallel/spark-defaults.conf`
 
@@ -345,4 +417,41 @@ cd tenant
     ```
 - The `shared/disk` volume is shared between `jarvispy`, `vadalog-parallel`, `data-manager`, `vadalingo`, and `jupyterlab`, enabling seamless file exchange across services within a tenant.
 - All services are configured with `restart: unless-stopped`, so they will automatically restart after a system reboot.
+
+## Migrating to a Different Machine
+
+All persistent state is stored in plain host directories (not Docker volumes), which makes migration straightforward if that state lives on a **separate mounted disk** (e.g. an AWS EBS volume, Azure Managed Disk, or GCP Persistent Disk) rather than the VM's boot disk.
+
+**Stateful paths to preserve:**
+
+| Path | Contents |
+|---|---|
+| `tenant/shared/disk` | Files shared across `jarvispy`, `vadalog-parallel`, `data-manager`, `vadalingo`, `jupyterlab` |
+| `tenant/postgres-data` | `pgvector` database |
+| `tenant/vadalog-parallel/{localCheckpoints,tmp,log}` | Engine runtime state |
+| `tenant/.env`, `router/.env` | Configuration values |
+| `*/prometheux-image-pull-token.txt` | ECR credentials |
+
+**Migration steps:**
+
+1. Stop the services on the source machine:
+    ```bash
+    cd tenant && ./docker-compose-down.sh
+    cd ../router && ./docker-compose-down.sh
+    ```
+2. Detach the mounted disk containing the stateful paths above from the source VM.
+3. Attach and mount the disk at the same path on the new VM (install Docker/Docker Compose there first — see [Prerequisites](#prerequisites)).
+4. Clone this repository again (the compose files themselves are not part of the mounted disk):
+    ```bash
+    git clone git@github.com:prometheuxresearch/prometheux-deploy.git
+    cd prometheux-deploy
+    ```
+5. If `.env` and `prometheux-image-pull-token.txt` are **not** on the mounted disk, recreate them as described in [Setup Instructions](#setup-instructions).
+6. Start the services again:
+    ```bash
+    cd router && ./docker-compose-up.sh
+    cd ../tenant && ./docker-compose-up.sh
+    ```
+
+Since no image layers or database data need to be re-downloaded or re-imported, migration is typically just a matter of remounting the disk and restarting the containers.
 
