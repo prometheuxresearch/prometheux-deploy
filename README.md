@@ -42,6 +42,11 @@ This repository contains the necessary files to deploy the Prometheux platform o
 
 ### Installing Docker
 
+> The official Docker package is supported on **Ubuntu**, **Debian**, **Fedora**, **RHEL/CentOS**, and others. Select your distribution below.
+
+<details>
+<summary><strong>Ubuntu</strong></summary>
+
 1. Update your package index and install required dependencies:
     ```bash
     sudo apt-get update
@@ -66,16 +71,94 @@ This repository contains the necessary files to deploy the Prometheux platform o
     sudo apt-get install -y docker-ce docker-ce-cli containerd.io
     ```
 
-4. Add your user to the `docker` group to run Docker without `sudo`:
-    ```bash
-    sudo usermod -aG docker $USER
-    ```
-    > **Note:** Log out and back in for the group change to take effect.
+</details>
 
-5. Verify the installation:
+<details>
+<summary><strong>Debian</strong></summary>
+
+1. Update your package index and install required dependencies:
     ```bash
-    docker --version
+    sudo apt-get update
+    sudo apt-get install -y ca-certificates curl gnupg
     ```
+
+2. Add Docker's official GPG key and repository:
+    ```bash
+    sudo install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    ```
+
+3. Install Docker Engine:
+    ```bash
+    sudo apt-get update
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+    ```
+
+</details>
+
+<details>
+<summary><strong>Fedora</strong></summary>
+
+1. Install the `dnf-plugins-core` package and add the Docker repository:
+    ```bash
+    sudo dnf -y install dnf-plugins-core
+    sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+    ```
+
+2. Install Docker Engine:
+    ```bash
+    sudo dnf install -y docker-ce docker-ce-cli containerd.io
+    ```
+
+3. Start and enable the Docker service:
+    ```bash
+    sudo systemctl start docker
+    sudo systemctl enable docker
+    ```
+
+</details>
+
+<details>
+<summary><strong>RHEL / CentOS / Rocky Linux / AlmaLinux</strong></summary>
+
+1. Install the `yum-utils` package and add the Docker repository:
+    ```bash
+    sudo yum install -y yum-utils
+    sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    ```
+
+2. Install Docker Engine:
+    ```bash
+    sudo yum install -y docker-ce docker-ce-cli containerd.io
+    ```
+
+3. Start and enable the Docker service:
+    ```bash
+    sudo systemctl start docker
+    sudo systemctl enable docker
+    ```
+
+</details>
+
+After installing Docker on any distribution, add your user to the `docker` group to run Docker without `sudo`:
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+> **Note:** Log out and back in for the group change to take effect.
+
+Verify the installation:
+
+```bash
+docker --version
+```
 
 ### Installing Docker Compose
 
