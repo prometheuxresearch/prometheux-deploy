@@ -218,7 +218,7 @@ prometheux-deploy/
 | Service | Port | Description |
 |---|---|---|
 | `jarvispy` | `8001` (configurable) | Main Prometheux API backend for the tenant. |
-| `vadalog-parallel` | internal | [Core reasoning engine](https://www.prometheux.ai/docs/learn/getting-started) of Prometheux. |
+| `vadalog-parallel` | internal | [Core reasoning engine of Prometheux](https://www.vldb.org/pvldb/vol17/p4614-benedetto.pdf). |
 | `data-manager` | internal | Manages data sources and persistence. |
 | `vadalingo` | internal | Natural language to Vadalog translation service. |
 | `pgvector` | internal | PostgreSQL database with vector extension for semantic storage. |
