@@ -345,13 +345,21 @@ users:
 
 ### 4. Configure the Tenant Stack
 
-Copy the example environment file and fill in the values:
+> The `tenant/` folder is a **template**, not a running stack. You never start it directly — instead you **copy it once per tenant user** and associate that copy with a single user. Repeat this section for every user you want to onboard.
+
+Copy the template folder and rename it after the tenant's username (e.g. `alice`):
 
 ```bash
-cp tenant/.env.example tenant/.env
+cp -r tenant alice
 ```
 
-Edit `tenant/.env`:
+Then copy the example environment file inside the new folder and fill in the values:
+
+```bash
+cp alice/.env.example alice/.env
+```
+
+Edit `alice/.env`:
 
 | Variable | Description |
 |---|---|
@@ -363,8 +371,10 @@ Edit `tenant/.env`:
 | `JUPYTERLAB_TOKEN` | The access token for JupyterLab. Choose any value — this is the token you will use to log in to JupyterLab. |
 
 You can also tune the Prometheux Engine by editing:
-- `tenant/vadalog-parallel/pmtx.properties`
-- `tenant/vadalog-parallel/spark-defaults.conf`
+- `alice/vadalog-parallel/pmtx.properties`
+- `alice/vadalog-parallel/spark-defaults.conf`
+
+> **To onboard additional users**, repeat this step for each one — copy `tenant` to a new folder (`cp -r tenant bob`), configure its `.env` with a **unique** `USERNAME`, `JARVISPY_PORT`, and `JUPYTERLAB_PORT`, and add the matching routing entry in `router/config.yaml` (see step 3).
 
 ### 5. Start the Router
 
@@ -377,8 +387,10 @@ This authenticates with ECR, pulls the latest `router-on-premise` image, and sta
 
 ### 6. Start the Tenant Stack
 
+Start the **per-user copy** you created in step 4 (not the `tenant/` template itself). Repeat for each user's folder:
+
 ```bash
-cd tenant
+cd alice
 ./docker-compose-up.sh
 ```
 
@@ -394,9 +406,9 @@ cd router
 ./docker-compose-down.sh
 ```
 
-To stop the **tenant** stack:
+To stop a **tenant** stack, run the script from that user's folder:
 ```bash
-cd tenant
+cd alice
 ./docker-compose-down.sh
 ```
 
