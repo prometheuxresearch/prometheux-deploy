@@ -8,6 +8,12 @@ services:
     network_mode: "host"  # Listens on host port 8000
     environment:
       - SECRET_KEY=${SECRET_KEY}
+      # MCP OAuth (Claude connector). SESSION_SECRET_KEY seals OAuth session
+      # tokens (keep stable; generate with:
+      #   python -c "import secrets; print(secrets.token_urlsafe(48))").
+      # OAUTH_ISSUER is this router's public HTTPS URL.
+      - SESSION_SECRET_KEY=${SESSION_SECRET_KEY}
+      - OAUTH_ISSUER=${OAUTH_ISSUER}
     volumes:
       - ./config.yaml:/app/app/config.yaml:ro
     restart: unless-stopped

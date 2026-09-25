@@ -110,6 +110,8 @@ Once connected to your VM, proceed with the Docker and Docker Compose installati
 |---|---|
 | `PROMETHEUX_PULL_IMAGE_TOKEN` | Password for authenticating against the Prometheux AWS ECR registry to pull Docker images. Used by the startup scripts in both `router/` and `tenant/`. |
 | `SECRET_KEY` | JWT secret used by the Router to validate tokens issued by the Prometheux UI. Set in `router/.env`. |
+| `SESSION_SECRET_KEY` | Seals the MCP OAuth session tokens used by the Claude connector. Must be a stable random secret. Set in `router/.env`. |
+| `OAUTH_ISSUER` | The Router's public HTTPS URL, advertised in OAuth discovery metadata (must be reachable by Claude). Set in `router/.env`. |
 | `CUSTOMER` | Customer-specific name that identifies the correct `vadalog-parallel` image tag (`prometheux-reasoner-premises-${CUSTOMER}:latest`). Set in `tenant/.env`. |
 
 ### Installing Docker
@@ -333,7 +335,11 @@ Copy the example environment file and fill in the values:
 cp router/.env.example router/.env
 ```
 
-Edit `router/.env` and set `SECRET_KEY` to the JWT secret provided by Prometheux. This key is used by the router to validate tokens issued by the Prometheux UI.
+Edit `router/.env` and set:
+
+- `SECRET_KEY` — the JWT secret provided by Prometheux, used by the router to validate tokens issued by the Prometheux UI.
+- `SESSION_SECRET_KEY` — a stable random secret that seals the MCP OAuth session tokens used by the Claude connector. Generate one with `python -c "import secrets; print(secrets.token_urlsafe(48))"`. Rotating it forces all connected users to reconnect.
+- `OAUTH_ISSUER` — the router's public HTTPS URL (the address Claude reaches, e.g. `https://px-deploy-test.onpx.ai`).
 
 Edit `router/config.yaml` to map each username to their tenant's `jarvispy` backend URL:
 
