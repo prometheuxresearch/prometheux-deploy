@@ -20,6 +20,7 @@ services:
       - DATA_MANAGER_URL=http://data-manager:8085
       - VADALOG_URL=http://vadalog-parallel:8080
       - VADALOG_PARSER_URL=http://vadalog-parallel:8080
+#      - VADALOG_WORKER_URLS=http://vadalog-parallel:8080
     restart: unless-stopped
 
   vadalog-parallel:
@@ -108,6 +109,32 @@ services:
       - myToken=${JUPYTERLAB_TOKEN}
       - myUrl=
     restart: unless-stopped
+
+  usage-manager:
+    image: 094284551733.dkr.ecr.eu-west-2.amazonaws.com/usage-manager:latest
+    pull_policy: always
+    container_name: usage-manager-${USERNAME}
+    networks:
+      - tenant_network
+    command: ["python", "-m", "app.uploader"]
+    volumes:
+      - './shared/disk:/disk:ro'
+    environment:
+      - SINGLE_VM_ON_PREM=true
+      - ORGANIZATION=${ORGANIZATION}
+      - USERNAME=${USERNAME}
+      - USAGE_SHARE_ROOT=/disk
+      - USAGE_S3_BUCKET=px-usage-metrics
+      - USAGE_S3_REGION=eu-west-2
+      - USAGE_S3_SYNC_INTERVAL=${USAGE_S3_SYNC_INTERVAL:-300}
+      - AWS_SHARED_CREDENTIALS_FILE=/run/secrets/aws_credentials
+    secrets:
+      - aws_credentials
+    restart: unless-stopped
+
+secrets:
+  aws_credentials:
+    file: ./secrets/aws-credentials
 
 networks:
   tenant_network:

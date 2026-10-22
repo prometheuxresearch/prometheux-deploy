@@ -1,0 +1,12 @@
+# Local environment and secrets — never commit these.
+# Applies to the tenant/ template and every per-user copy (alice/, bob/, …).
+**/.env
+**/secrets/aws-credentials
+
+# Per-tenant runtime state (created by the stack, not source).
+**/shared/
+**/postgres-data/
+**/qdrant-data/
+**/vadalog-parallel/localCheckpoints/
+**/vadalog-parallel/tmp/
+**/vadalog-parallel/log/

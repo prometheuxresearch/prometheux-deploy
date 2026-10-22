@@ -8,7 +8,6 @@ This repository contains the necessary files to deploy the Prometheux platform o
 - **Tenant** (`tenant/`) — a full per-tenant stack including the reasoning engine, data manager, language service, vector database, and JupyterLab.
 
 This deployment runs on **any Linux machine that can run Docker** — whether a physical server in your data centre or a VM on a public cloud. If you are using a cloud VM, see the [Provisioning a Cloud VM](#provisioning-a-cloud-vm-optional) section before proceeding.
-
 ```
 ┌─────────────────────────────────────────┐
 │               Router                    │
@@ -113,6 +112,7 @@ Once connected to your VM, proceed with the Docker and Docker Compose installati
 | `SESSION_SECRET_KEY` | Seals the MCP OAuth session tokens used by the Claude connector. Must be a stable random secret. Set in `router/.env`. |
 | `OAUTH_ISSUER` | The Router's public HTTPS URL, advertised in OAuth discovery metadata (must be reachable by Claude). Set in `router/.env`. |
 | `CUSTOMER` | Customer-specific name that identifies the correct `vadalog-parallel` image tag (`prometheux-reasoner-premises-${CUSTOMER}:latest`). Set in `tenant/.env`. |
+| `AWS` credentials | Key for the customer's IAM user, used by `usage-manager` to push usage metrics to S3 (write-only to `users/${ORGANIZATION}/*`, never delete, no ECR). Provided as a **Docker secret** (`tenant/secrets/aws-credentials`), not an env var, so it never lands in a committed file or in `docker inspect`. The same key is used for every tenant on this machine. |
 
 ### Installing Docker
 
@@ -297,6 +297,7 @@ prometheux-deploy/
 | `vadalingo` | internal | Natural language to Engine translation service. |
 | `pgvector` | internal | PostgreSQL database with vector extension for semantic storage. |
 | `jupyterlab` | `8888` | JupyterLab with Python and Engine kernels. Install the SDK via: `pip install --upgrade prometheux_chain` |
+| `usage-manager` | internal | Pushes this tenant's usage metrics to Prometheux's S3 bucket on a timer (write-once; no inbound ports). |
 
 ---
 
@@ -376,6 +377,13 @@ Edit `alice/.env`:
 | `JUPYTERLAB_PORT` | The host port on which JupyterLab is exposed (e.g. `8888`). Reachable at `http://localhost:${JUPYTERLAB_PORT}` from the VM. |
 | `JUPYTERLAB_TOKEN` | The access token for JupyterLab. Choose any value — this is the token you will use to log in to JupyterLab. |
 
+The `usage-manager` metrics push needs AWS credentials, but these are **not** set in `.env` — they are provided as a Docker secret so the key is never written into a committed file. Create it once per tenant folder from the template:
+
+```bash
+cp alice/secrets/aws-credentials.example alice/secrets/aws-credentials
+# edit alice/secrets/aws-credentials with the key provided by Prometheux
+```
+
 You can also tune the Prometheux Engine by editing:
 - `alice/vadalog-parallel/pmtx.properties`
 - `alice/vadalog-parallel/spark-defaults.conf`
@@ -434,6 +442,7 @@ cd alice
       alice: "http://localhost:8001"
     ```
 - The `shared/disk` volume is shared between `jarvispy`, `vadalog-parallel`, `data-manager`, `vadalingo`, and `jupyterlab`, enabling seamless file exchange across services within a tenant.
+- The `usage-manager` service mounts that same `shared/disk` **read-only** and periodically copies the tenant's usage metrics (`disk/usage-metrics/`) to Prometheux's S3 bucket under `users/${ORGANIZATION}/${USERNAME}/`. It exposes no ports, holds no state, and only ever writes to S3 — where objects are write-once (they cannot be overwritten or deleted). Set `ORGANIZATION` in each tenant's `.env`, and provide the AWS key as a Docker secret at `secrets/aws-credentials` (copied from `secrets/aws-credentials.example`). The secret is mounted read-only into the container and never appears in a committed file or in `docker inspect`.
 - All services are configured with `restart: unless-stopped`, so they will automatically restart after a system reboot.
 
 ## Migrating to a Different Machine
