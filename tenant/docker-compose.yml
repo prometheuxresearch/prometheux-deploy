@@ -134,7 +134,7 @@ services:
 
 secrets:
   aws_credentials:
-    file: ./secrets/aws-credentials
+    file: ../secrets/aws-credentials
 
 networks:
   tenant_network:
